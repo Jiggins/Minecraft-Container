@@ -7,19 +7,13 @@ RUN mkdir -p /opt/minecraft
 COPY lib /opt/minecraft
 COPY bin /opt/minecraft/bin
 
+WORKDIR /opt/minecraft
+
 # Extract modpack
 RUN /opt/minecraft/bin/unpack-server.sh
 
 # Override modpack config files
 COPY etc /opt/minecraft
 
-RUN chmod +x /opt/minecraft/server-start.sh
-
-WORKDIR /opt/minecraft
-RUN bash -x /opt/minecraft/server-start.sh
-
-# Agree to the EULA
-RUN sed -i '/^eula/s/false/true/' eula.txt
-
 EXPOSE 25565
-ENTRYPOINT /opt/minecraft/server-start.sh
+ENTRYPOINT /opt/minecraft/bin/start-server.sh

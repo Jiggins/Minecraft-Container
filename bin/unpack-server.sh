@@ -8,14 +8,38 @@ function die() {
   exit ${ret}
 }
 
-zipfile=$(find /opt/minecraft -type f -name '*.zip')
+zipfile=$(find /opt/minecraft -maxdepth 1 -type f -name '*.zip')
+
+installer=$(find /opt/minecraft -maxdepth 1 -type f -name 'serverinstall_*')
+
+function install_from_zip() {
+  echo "Exrtacting ${zipfile}"
+  unzip "${zipfile}" \
+    || die "Failed to extract ${zipfile}"
+
+  rm -v "${zipfile}"
+
+  echo "Successfully extracted ${zipfile}"
+}
+
+# FTB distributes a binary file to install mods intead of a script or a zip
+# file. This is a terrible idea from a security perspective but at least we're
+# running in Docker. Arbitrary code execution as a service.
+function install_from_binary() {
+  chmod +x "${installer}"
+  "${installer}"
+}
 
 pushd /opt/minecraft
 
-echo "Exrtacting ${zipfile}"
-unzip "${zipfile}" \
-  || die "Failed to extract ${zipfile}"
+if [[ -n "${zipfile}" ]]; then
+  install_from_zip
+  exit $?
+fi
 
-rm -v "${zipfile}"
+if [[ -n "${installer}" ]]; then
+  install_from_binary
+  exit $?
+fi
 
-echo "Successfully extracted ${zipfile}"
+die "No modpack found, exiting"
