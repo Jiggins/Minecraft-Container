@@ -21,4 +21,4 @@ if [[ ! -f 'eula.txt' ]]; then
   echo "eula=true" > eula.txt
 fi
 
-java "${JVM_ARGS[@]}" -jar "${forge_jar}" nogui
+java "${JVM_ARGS[@]}" -jar "${forge_jar}" nogui 2>&1
