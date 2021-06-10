@@ -9,7 +9,16 @@ declare docker_tag="${registry}/minecraft"
 
 docker build --tag "${docker_tag}" .
 
-# docker run -p 8443:8443 -p 25565:25565 --expose 25565 "${docker_tag}:latest"
+container=$(docker run \
+  --detach \
+  -p 8443:8443 \
+  -p 25565:25565 \
+  --volume minecraft:/mnt/minecraft \
+  "${docker_tag}:latest")
+
+trap "docker stop ${container}"  EXIT
+
+docker exec -it "${container}" bash --login
 
 aws ecr get-login-password --region eu-west-1 \
   | docker login --username AWS --password-stdin "${registry}"

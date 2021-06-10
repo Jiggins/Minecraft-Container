@@ -33,12 +33,15 @@ function install_from_binary() {
 pushd /opt/minecraft
 
 if [[ -n "${zipfile}" ]]; then
-  install_from_zip
+  install_from_zip \
+    || die "Failed to unpack and install ${zipfile}"
   exit $?
 fi
 
 if [[ -n "${installer}" ]]; then
-  install_from_binary
+  install_from_binary \
+    || die "Failed to install from binary installer: ${installer}"
+
   exit $?
 fi
 
