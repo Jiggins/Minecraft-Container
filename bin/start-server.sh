@@ -23,4 +23,4 @@ fi
 
 FLASK_APP=/opt/minecraft/bin/healthcheck.py flask run -h 0.0.0.0 -p 8443 &
 
-java "${JVM_ARGS[@]}" -jar "${forge_jar}" nogui 2>&1
+exec java "${JVM_ARGS[@]}" -jar "${forge_jar}" nogui 2>&1

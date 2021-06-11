@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 
+import logging
 import os
 from time import time
 from typing import List
 
 import boto3
+from botocore.exceptions import NoCredentialsError
 from flask import Flask
 from mcstatus import MinecraftServer
 from rcon import Client
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 app = Flask(__name__)
 
@@ -17,7 +23,7 @@ TIMEOUT = os.environ.get('TIMEOUT', 900)
 
 start_time = time()
 
-cloudwatch = boto3.client('cloudwatch')
+cloudwatch = boto3.client('cloudwatch', os.environ.get('AWS_REGION', 'eu-west-1'))
 
 
 def uptime():
@@ -49,10 +55,14 @@ def create_metric(name: str, value, unit=None, dimensions={}):
 
 
 def send_metrics(metrics: List[dict]):
-    cloudwatch.put_metric_data(
-        Namespace=NAMESPACE,
-        MetricData=metrics
-    )
+    try:
+        cloudwatch.put_metric_data(
+            Namespace=NAMESPACE,
+            MetricData=metrics
+        )
+    except NoCredentialsError:
+        logger.warning("No AWS credentials found, logging metrics to stdout")
+        [logger.info(metric) for metric in metrics]
 
 
 def server_tps():

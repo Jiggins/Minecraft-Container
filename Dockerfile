@@ -1,8 +1,14 @@
 FROM amazonlinux
 
 RUN yum update -y
-RUN yum install -y curl iputils java-1.8.0-openjdk python3 unzip wget which
-run python3 -m pip install boto3 Flask mcstatus
+RUN yum install -y curl iputils java-1.8.0-openjdk unzip wget which
+
+# Install a recent version of Python
+RUN amazon-linux-extras enable python3.8
+RUN amazon-linux-extras install python3.8
+RUN ln -snf /usr/bin/python3.8 /usr/bin/python3
+
+RUN python3 -m pip install boto3 Flask mcstatus rcon
 
 RUN mkdir -p /opt/minecraft
 COPY lib /opt/minecraft
