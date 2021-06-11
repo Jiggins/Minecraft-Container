@@ -23,10 +23,6 @@ RUN /opt/minecraft/bin/unpack-server.sh
 COPY bin /opt/minecraft/bin
 COPY etc /opt/minecraft
 
-# Symlink to external volume
-RUN mkdir -p /mnt/minecraft/world
-RUN ln -s /mnt/minecraft/world /opt/minecraft/world
-
 # Healthcheck port
 EXPOSE 8443
 
