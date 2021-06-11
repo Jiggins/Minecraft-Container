@@ -27,4 +27,7 @@ EXPOSE 8443
 # Minecraft port
 EXPOSE 25565
 
+# RCon port
+EXPOSE 25575
+
 ENTRYPOINT /opt/minecraft/bin/start-server.sh

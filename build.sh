@@ -13,6 +13,7 @@ container=$(docker run \
   --detach \
   -p 8443:8443 \
   -p 25565:25565 \
+  -p 25575:25575 \
   --volume minecraft:/mnt/minecraft \
   "${docker_tag}:latest")
 

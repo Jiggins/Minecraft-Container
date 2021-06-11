@@ -7,6 +7,7 @@ from typing import List
 import boto3
 from flask import Flask
 from mcstatus import MinecraftServer
+from rcon import Client
 
 app = Flask(__name__)
 
@@ -42,7 +43,7 @@ def create_metric(name: str, value, unit=None, dimensions={}):
         })
 
     if unit:
-        metric['Unit'] = value
+        metric['Unit'] = unit
 
     return metric
 
@@ -52,6 +53,31 @@ def send_metrics(metrics: List[dict]):
         Namespace=NAMESPACE,
         MetricData=metrics
     )
+
+
+def server_tps():
+    metrics = []
+
+    with Client('127.0.0.1', 25575, passwd='hunter2') as client:
+        response = client.run('forge tps')
+
+        for dimension in response.strip().split('\n'):
+            stats = dimension.split()
+
+            # The final line of the response gives an overall latency/TPS for all dimensions
+            if stats[0] == 'Overall:':
+                name = stats[0]
+                tick_time = float(stats[4])
+                tps = float(stats[8])
+            else:
+                name = stats[1]
+                tick_time = float(stats[6])
+                tps = float(stats[10])
+
+            metrics.append(create_metric('Tick Time', tick_time, unit='Milliseconds', dimensions={'dimension': name}))
+            metrics.append(create_metric('TPS', tps, unit=None, dimensions={'dimension': name}))
+
+    send_metrics(metrics)
 
 
 def server_metrics():
@@ -78,6 +104,8 @@ def server_metrics():
     metrics.append(create_metric('Latency', latency, 'Milliseconds'))
     metrics.append(create_metric('PlayerCount', player_count))
     send_metrics(metrics)
+
+    server_tps()
 
     return f"The server has {player_count} players and replied in {latency} ms"
 
