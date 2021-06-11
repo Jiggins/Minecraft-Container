@@ -9,19 +9,51 @@ declare docker_tag="${registry}/minecraft"
 
 docker build --tag "${docker_tag}" .
 
-container=$(docker run \
-  --detach \
-  -p 8443:8443 \
-  -p 25565:25565 \
-  -p 25575:25575 \
-  --volume minecraft:/mnt/minecraft \
-  "${docker_tag}:latest")
+function interactive() {
+  docker run -it --rm \
+    -p 8443:8443 \
+    -p 25565:25565 \
+    -p 25575:25575 \
+    --volume minecraft:/mnt/minecraft \
+    "${docker_tag}:latest"
+}
 
-trap "docker stop ${container}"  EXIT
+function background() {
+  container=$(docker run \
+    --rm \
+    --detach \
+    -p 8443:8443 \
+    -p 25565:25565 \
+    -p 25575:25575 \
+    --volume minecraft:/mnt/minecraft \
+    "${docker_tag}:latest")
 
-docker exec -it "${container}" bash --login
+  trap "docker stop ${container}"  EXIT
 
-aws ecr get-login-password --region eu-west-1 \
-  | docker login --username AWS --password-stdin "${registry}"
+  docker exec -it "${container}" bash --login
+}
 
-docker push "${docker_tag}"
+function push() {
+  aws ecr get-login-password --region eu-west-1 \
+    | docker login --username AWS --password-stdin "${registry}"
+
+  docker push "${docker_tag}"
+}
+
+while (( $# > 0 )); do
+  case "${1}" in
+    -i|--interactive)
+      interactive
+      ;;
+
+    -b|--background)
+      background
+      ;;
+
+    -p|--push)
+      push
+      ;;
+  esac
+
+  shift
+done
