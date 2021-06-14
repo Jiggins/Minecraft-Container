@@ -11,9 +11,14 @@ from flask import Flask
 from mcstatus import MinecraftServer
 from rcon import Client
 
+# Log formatter should match minecraft's log format
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] [%(name)s/%(levelname)s]: %(message)s',
+    datefmt='%H:%M:%S'
+)
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
 
 app = Flask(__name__)
 
@@ -28,6 +33,13 @@ cloudwatch = boto3.client('cloudwatch', os.environ.get('AWS_REGION', 'eu-west-1'
 
 def uptime():
     return time() - start_time
+
+
+def show_startup_time():
+    logger.info("Server started Successfully! Startup time: %s seconds", uptime())
+
+    # Never run again
+    show_startup_time.__code__ = (lambda: None).__code__
 
 
 def create_metric(name: str, value, unit=None, dimensions={}):
@@ -104,6 +116,8 @@ def server_metrics():
             return f"Server is starting up: {e}"
 
         return f"Server is offline: {e}", 500
+
+    show_startup_time()
 
     latency = status.latency
     player_count = status.players.online
