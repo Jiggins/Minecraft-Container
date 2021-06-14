@@ -66,12 +66,11 @@ def send_metrics(metrics: List[dict]):
 
 
 def server_tps():
-    metrics = []
-
     with Client('127.0.0.1', 25575, passwd='hunter2') as client:
         response = client.run('forge tps')
 
         for dimension in response.strip().split('\n'):
+            metrics = []
             stats = dimension.split()
 
             # The final line of the response gives an overall latency/TPS for all dimensions
@@ -87,7 +86,7 @@ def server_tps():
             metrics.append(create_metric('Tick Time', tick_time, unit='Milliseconds', dimensions={'dimension': name}))
             metrics.append(create_metric('TPS', tps, unit=None, dimensions={'dimension': name}))
 
-    send_metrics(metrics)
+            send_metrics(metrics)
 
 
 def server_metrics():
